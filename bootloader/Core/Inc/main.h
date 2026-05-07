@@ -55,6 +55,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void bootloader_usb_read_data(void);
 void bootloader_jump_to_user_app(void);
+void print_msg(int msg_len);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -127,6 +128,7 @@ void bootloader_jump_to_user_app(void);
 
 /* USER CODE BEGIN Private defines */
 #define USB_BUF_LEN 128
+#define PRINT_MSG(fmt, ...) print_msg(sprintf((char*)usb_tx_buf, fmt, ##__VA_ARGS__))
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

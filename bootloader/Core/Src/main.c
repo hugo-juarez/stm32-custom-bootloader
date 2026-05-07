@@ -92,20 +92,20 @@ int main(void)
   MX_CRC_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  int msg_len = sprintf((char *) usb_tx_buf, "BL_DEBUG_MSG: Hello from Bootloader!!!\r\n");
-  CDC_Transmit_FS(usb_tx_buf, msg_len);
+  HAL_Delay(2000);
+  PRINT_MSG("BL_DEBUG_MSG: Hello from Bootloader!!!\r\n");
 
   if ( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET )
   {
-    msg_len = sprintf((char *) usb_tx_buf, "BL_DEBUG_MSG: Button is pressed .. going to BL mode.\r\n");
-    CDC_Transmit_FS(usb_tx_buf, msg_len);
+    PRINT_MSG("BL_DEBUG_MSG: Button is pressed .. going to BL mode.\r\n");
     bootloader_usb_read_data();
   } else
   {
-    msg_len = sprintf((char *) usb_tx_buf, "BL_DEBUG_MSG: Button is not pressed .. executing user app.\r\n");
-    CDC_Transmit_FS(usb_tx_buf, msg_len);
+    PRINT_MSG("BL_DEBUG_MSG: Button is not pressed .. executing user app.\r\n");
     bootloader_jump_to_user_app();
   }
+
+  while (1);
   /* USER CODE END 2 */
 }
 
@@ -319,6 +319,16 @@ void bootloader_jump_to_user_app(void)
 {
 
 }
+
+void print_msg(const int msg_len)
+{
+  uint8_t result = USBD_BUSY;
+  while (result == USBD_BUSY)
+  {
+    result = CDC_Transmit_FS(usb_tx_buf, msg_len);
+  }
+}
+
 /* USER CODE END 4 */
 
 /**
