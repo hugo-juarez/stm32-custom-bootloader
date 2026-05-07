@@ -94,7 +94,12 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-
+USBD_CDC_LineCodingTypeDef LineCoding = {
+  115200,
+  0x00,
+  0x00,
+  0x08
+};
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -220,11 +225,17 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
     case CDC_SET_LINE_CODING:
-
+      {
+        USBD_CDC_LineCodingTypeDef *lc = (USBD_CDC_LineCodingTypeDef *)pbuf;
+        memcpy(&LineCoding, lc, sizeof(USBD_CDC_LineCodingTypeDef));
+      }
     break;
 
     case CDC_GET_LINE_CODING:
-
+      {
+        USBD_CDC_LineCodingTypeDef *lc = (USBD_CDC_LineCodingTypeDef *)pbuf;
+        memcpy(lc, &LineCoding, sizeof(USBD_CDC_LineCodingTypeDef));
+      }
     break;
 
     case CDC_SET_CONTROL_LINE_STATE:
