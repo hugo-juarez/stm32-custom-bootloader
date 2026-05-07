@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t usb_tx_buf[USB_BUF_LEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +97,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    uint32_t msg_len = sprintf((char *) usb_tx_buf, "Hello from user application!\r\n");
+    CDC_Transmit_FS(usb_tx_buf, msg_len);
+    uint32_t current_time = HAL_GetTick();
+    while (HAL_GetTick() < (current_time + 500));
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
