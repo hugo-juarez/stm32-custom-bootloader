@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +44,7 @@
 CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN PV */
-
+uint8_t usb_tx_buf[USB_BUF_LEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,6 +102,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    int msg_len = sprintf((char *) usb_tx_buf, "Testing communication\r\n");
+    CDC_Transmit_FS(usb_tx_buf, msg_len);
+    uint32_t curr_tick = HAL_GetTick();
+    while (HAL_GetTick() < curr_tick + 500);
   }
   /* USER CODE END 3 */
 }
