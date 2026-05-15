@@ -127,6 +127,7 @@ void print_msg(int msg_len);
 #define MEMS_INT2_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+#define FLASH_SECTOR_3_BASE_ADDRESS 0x0800C000U
 #define USB_BUF_LEN 128
 #define PRINT_MSG(fmt, ...) print_msg(sprintf((char*)usb_tx_buf, fmt, ##__VA_ARGS__))
 /* USER CODE END Private defines */

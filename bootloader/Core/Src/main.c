@@ -45,6 +45,7 @@ CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN PV */
 uint8_t usb_tx_buf[USB_BUF_LEN];
+extern USBD_HandleTypeDef hUsbDeviceFS;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,7 +106,6 @@ int main(void)
     bootloader_jump_to_user_app();
   }
 
-  while (1);
   /* USER CODE END 2 */
 }
 
@@ -318,6 +318,43 @@ void bootloader_usb_read_data(void)
 void bootloader_jump_to_user_app(void)
 {
 
+  // Function pointer to hold the address of the reset handler
+  void (*app_reset_handler)(void) __attribute__((noreturn));
+
+  PRINT_MSG("BL_DEBUG_MSG: bootloader_jump_to_user_app\r\n");
+
+  // Configure MSP to be the base address of application stack
+  // Which is the first value in the start of the application flash sector
+  uint32_t msp_value = *(volatile uint32_t *) FLASH_SECTOR_3_BASE_ADDRESS;
+  PRINT_MSG("BL_DEBUG_MSG: MSP value: %#lx\r\n", msp_value);
+
+  // Fetch reset handler address of application
+  // Which is the second value in the stert of the application flash sector
+  uint32_t reset_handler_address = *(volatile uint32_t *) ( FLASH_SECTOR_3_BASE_ADDRESS + 4 );
+
+  app_reset_handler = (void *) reset_handler_address;
+
+  PRINT_MSG("BL_DEBUG_MSG: app reset handler address: %#lx\r\n", reset_handler_address);
+  HAL_Delay(100);              // let print drain
+
+  USBD_DeInit(&hUsbDeviceFS);
+  HAL_DeInit();
+  HAL_RCC_DeInit();   // switch back to HSI, disable PLL/HSE
+
+  SysTick->CTRL = 0;
+
+  // Clearing NVIC
+  for (int i = 0; i < 8; i++) {
+    NVIC->ICER[i] = 0xFFFFFFFFU;   // disable all
+    NVIC->ICPR[i] = 0xFFFFFFFFU;   // clear pending
+  }
+
+  SCB->VTOR = FLASH_SECTOR_3_BASE_ADDRESS;
+  __DSB(); __ISB();
+
+  __set_MSP(msp_value);        // set MSP LAST, just before jumping
+  // Jump to reset handler of the application
+  app_reset_handler();
 }
 
 void print_msg(const int msg_len)
