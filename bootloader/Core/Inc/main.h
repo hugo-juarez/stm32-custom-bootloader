@@ -36,7 +36,21 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+typedef enum
+{
+  BL_GET_VER = 0x51,
+  BL_GET_HELP = 0x52,
+  BL_GET_CID = 0x53,
+  BL_GET_RDP_STATUS = 0x54,
+  BL_GO_TO_ADDR = 0x55,
+  BL_FLASH_ERASE = 0x56,
+  BL_MEM_WRITE = 0x57,
+  BL_EN_RW_PROTECT = 0x58,
+  BL_MEM_READ = 0x59,
+  BL_READ_SECTOR_P_STATUS = 0x5A,
+  BL_OTP_READ = 0x5B,
+  BL_DIS_R_W_PROTECT = 0x5C
+} BL_RX_CMD;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -55,6 +69,20 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void bootloader_usb_read_data(void);
 void bootloader_jump_to_user_app(void);
+
+void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer);
+void bootloader_handle_gethelp_cmd(uint8_t *pBuffer);
+void bootloader_handle_getcid_cmd(uint8_t *pBuffer);
+void bootloader_handle_getrdp_cmd(uint8_t *pBuffer);
+void bootloader_handle_go_cmd(uint8_t *pBuffer);
+void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer);
+void bootloader_handle_mem_write_cmd(uint8_t *pBuffer);
+void bootloader_handle_en_rw_protect(uint8_t *pBuffer);
+void bootloader_handle_mem_read (uint8_t *pBuffer);
+void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer);
+void bootloader_handle_read_otp(uint8_t *pBuffer);
+void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
+
 void print_msg(int msg_len);
 /* USER CODE END EFP */
 
@@ -129,6 +157,7 @@ void print_msg(int msg_len);
 /* USER CODE BEGIN Private defines */
 #define FLASH_SECTOR_3_BASE_ADDRESS 0x0800C000U
 #define USB_BUF_LEN 128
+#define BL_RX_LEN 200
 #define PRINT_MSG(fmt, ...) print_msg(sprintf((char*)usb_tx_buf, fmt, ##__VA_ARGS__))
 /* USER CODE END Private defines */
 

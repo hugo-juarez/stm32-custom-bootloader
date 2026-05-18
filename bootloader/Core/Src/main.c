@@ -45,7 +45,10 @@ CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN PV */
 uint8_t usb_tx_buf[USB_BUF_LEN];
+uint8_t usb_rx_buffer[BL_RX_LEN];
 extern USBD_HandleTypeDef hUsbDeviceFS;
+extern CDC_RX_STATE cdc_rx_state;
+extern uint8_t data_len;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -313,6 +316,62 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void bootloader_usb_read_data(void)
 {
+  // Start receiving data from USB
+  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &usb_rx_buffer[0]);
+  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
+  while (1)
+  {
+    if (cdc_rx_state == CDC_RX_STATE_IDLE) continue;
+
+    const BL_RX_CMD cmd = (BL_RX_CMD) usb_rx_buffer[1];
+
+    switch (cmd)
+    {
+    case BL_GET_VER:
+      bootloader_handle_getver_cmd(usb_rx_buffer);
+      break;
+    case BL_GET_HELP:
+      bootloader_handle_gethelp_cmd(usb_rx_buffer);
+      break;
+    case BL_GET_CID:
+      bootloader_handle_getcid_cmd(usb_rx_buffer);
+      break;
+    case BL_GET_RDP_STATUS:
+      bootloader_handle_getrdp_cmd(usb_rx_buffer);
+      break;
+    case BL_GO_TO_ADDR:
+      bootloader_handle_go_cmd(usb_rx_buffer);
+      break;
+    case BL_FLASH_ERASE:
+      bootloader_handle_flash_erase_cmd(usb_rx_buffer);
+      break;
+    case BL_MEM_WRITE:
+      bootloader_handle_mem_write_cmd(usb_rx_buffer);
+      break;
+    case BL_EN_RW_PROTECT:
+      bootloader_handle_en_rw_protect(usb_rx_buffer);
+      break;
+    case BL_MEM_READ:
+      bootloader_handle_mem_read(usb_rx_buffer);
+      break;
+    case BL_READ_SECTOR_P_STATUS:
+      bootloader_handle_read_sector_protection_status(usb_rx_buffer);
+      break;
+    case BL_OTP_READ:
+      bootloader_handle_read_otp(usb_rx_buffer);
+      break;
+    case BL_DIS_R_W_PROTECT:
+      bootloader_handle_dis_rw_protect(usb_rx_buffer);
+      break;
+    default:
+      PRINT_MSG("BL_DEBUG_MSG:Invalid command code received from host \n");
+      break;
+    }
+
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &usb_rx_buffer[0]);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  }
 
 }
 void bootloader_jump_to_user_app(void)
@@ -364,6 +423,55 @@ void print_msg(const int msg_len)
   {
     result = CDC_Transmit_FS(usb_tx_buf, msg_len);
   }
+}
+
+void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer)
+{
+
+}
+void bootloader_handle_gethelp_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_getcid_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_getrdp_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_go_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_mem_write_cmd(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_en_rw_protect(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_mem_read (uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_read_otp(uint8_t *pBuffer)
+{
+
+}
+void bootloader_handle_dis_rw_protect(uint8_t *pBuffer)
+{
+
 }
 
 /* USER CODE END 4 */
