@@ -83,6 +83,9 @@ void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer);
 void bootloader_handle_read_otp(uint8_t *pBuffer);
 void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
 
+void bootloader_send_ack(uint8_t cmd, uint8_t len);
+void bootloader_send_nack(void);
+
 void print_msg(int msg_len);
 /* USER CODE END EFP */
 
@@ -158,6 +161,8 @@ void print_msg(int msg_len);
 #define FLASH_SECTOR_3_BASE_ADDRESS 0x0800C000U
 #define USB_BUF_LEN 128
 #define BL_RX_LEN 200
+#define BL_ACK 0xA5
+#define BL_NACK 0x7F
 #define PRINT_MSG(fmt, ...) print_msg(sprintf((char*)usb_tx_buf, fmt, ##__VA_ARGS__))
 /* USER CODE END Private defines */
 
