@@ -100,6 +100,9 @@ USBD_CDC_LineCodingTypeDef LineCoding = {
   0x00,
   0x08
 };
+
+CDC_RX_STATE cdc_rx_state = CDC_RX_STATE_IDLE;
+uint8_t data_len = 0;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -272,8 +275,8 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  cdc_rx_state = CDC_RX_STATE_DATA_RECEIVED;
+  data_len = *Len;
   return (USBD_OK);
   /* USER CODE END 6 */
 }
