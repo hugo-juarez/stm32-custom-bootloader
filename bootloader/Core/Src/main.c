@@ -474,12 +474,10 @@ void bootloader_handle_dis_rw_protect(uint8_t *pBuffer)
 
 }
 
-void bootloader_send_ack(uint8_t cmd, uint8_t len)
+void bootloader_send_ack(void)
 {
-  uint8_t ack_buf[2];
-  ack_buf[0] = BL_ACK;
-  ack_buf[1] = len;
-  CDC_Transmit_FS(ack_buf, 2);
+  uint8_t ack = BL_ACK;
+  CDC_Transmit_FS(&ack, 1);
 }
 
 void bootloader_send_nack(void)

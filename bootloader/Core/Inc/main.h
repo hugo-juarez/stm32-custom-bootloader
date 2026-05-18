@@ -83,7 +83,7 @@ void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer);
 void bootloader_handle_read_otp(uint8_t *pBuffer);
 void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
 
-void bootloader_send_ack(uint8_t cmd, uint8_t len);
+void bootloader_send_ack(void);
 void bootloader_send_nack(void);
 
 void print_msg(int msg_len);
