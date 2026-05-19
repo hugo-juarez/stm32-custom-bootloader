@@ -51,6 +51,12 @@ typedef enum
   BL_OTP_READ = 0x5B,
   BL_DIS_R_W_PROTECT = 0x5C
 } BL_RX_CMD;
+
+typedef enum
+{
+  VERIFY_CRC_SUCCESS,
+  VERIFY_CRC_ERROR,
+} VERIFY_CRC;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -85,6 +91,8 @@ void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
 
 void bootloader_send_ack(void);
 void bootloader_send_nack(void);
+
+VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host);
 
 void print_msg(int msg_len);
 /* USER CODE END EFP */

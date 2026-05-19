@@ -324,6 +324,23 @@ void bootloader_usb_read_data(void)
   {
     if (cdc_rx_state == CDC_RX_STATE_IDLE) continue;
 
+    uint8_t len = usb_rx_buffer[0] + 1;
+    uint32_t host_crc = *((uint32_t *) (usb_rx_buffer + len - 4) );
+
+    VERIFY_CRC crc_valid = bootloader_verify_crc(&usb_rx_buffer[0], len - 4, host_crc);
+
+    if (crc_valid == VERIFY_CRC_ERROR)
+    {
+      bootloader_send_nack();
+      continue;
+    };
+
+    // If CRC matches we send ACK byte
+    PRINT_MSG("BL_DEBUG_MSG: checksum success !!");
+    bootloader_send_ack();
+
+    
+
     const BL_RX_CMD cmd = (BL_RX_CMD) usb_rx_buffer[1];
 
     switch (cmd)
@@ -484,6 +501,21 @@ void bootloader_send_nack(void)
 {
   uint8_t nack = BL_NACK;
   CDC_Transmit_FS(&nack, 1);
+}
+
+VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host)
+{
+  uint32_t uw_crc_value = 0xff;
+
+  for (uint32_t i = 0; i < len; i ++)
+  {
+    uint32_t i_data = pBuffer[i];
+    uw_crc_value = HAL_CRC_Accumulate(&hcrc, &i_data, 1);
+  }
+
+  if (uw_crc_value != crc_host) return VERIFY_CRC_SUCCESS;
+
+  return VERIFY_CRC_ERROR;
 }
 
 /* USER CODE END 4 */
