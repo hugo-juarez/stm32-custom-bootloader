@@ -384,7 +384,7 @@ void bootloader_usb_read_data(void)
     };
 
     // If CRC matches we send ACK byte
-    print_msg("BL_DEBUG_MSG: checksum success !!");
+    print_msg("BL_DEBUG_MSG: checksum success !!\r\n");
     bootloader_send_ack();
 
     
@@ -430,7 +430,7 @@ void bootloader_usb_read_data(void)
       bootloader_handle_dis_rw_protect(usb_rx_buffer);
       break;
     default:
-      print_msg("BL_DEBUG_MSG:Invalid command code received from host \n");
+      print_msg("BL_DEBUG_MSG:Invalid command code received from host \r\n");
       break;
     }
 
