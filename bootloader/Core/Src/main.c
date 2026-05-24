@@ -385,7 +385,7 @@ void bootloader_usb_read_data(void)
     };
 
     // If CRC matches we send ACK byte
-    print_msg("BL_DEBUG_MSG: checksum success !!\r\n");
+    print_msg("BL_DEBUG_MSG: Checksum success !!\r\n");
     bootloader_send_ack();
 
     
@@ -431,7 +431,7 @@ void bootloader_usb_read_data(void)
       bootloader_handle_dis_rw_protect(usb_rx_buffer);
       break;
     default:
-      print_msg("BL_DEBUG_MSG:Invalid command code received from host \r\n");
+      print_msg("BL_DEBUG_MSG: Invalid command code received from host \r\n");
       break;
     }
 
@@ -496,7 +496,9 @@ void print_msg(const char *fmt, ...)
 
 void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer)
 {
-
+  print_msg("BL_DEBUG_MSG: bootloader_handle_getver_cmd\r\n");
+  uint8_t bl_version = (uint8_t) BL_VERSION;
+  bootloader_send_msg(&bl_version, 1);
 }
 void bootloader_handle_gethelp_cmd(uint8_t *pBuffer)
 {
@@ -541,6 +543,18 @@ void bootloader_handle_read_otp(uint8_t *pBuffer)
 void bootloader_handle_dis_rw_protect(uint8_t *pBuffer)
 {
 
+}
+
+void bootloader_send_msg(const uint8_t* msg, const uint8_t msg_len)
+{
+  uint8_t result = USBD_BUSY;
+  usb_tx_buf[0] = msg_len;
+  sprintf((char *)&usb_tx_buf[1], (char *)msg, msg_len);
+
+  while (result == USBD_BUSY)
+  {
+    result = CDC_Transmit_FS(usb_tx_buf, msg_len + 1);
+  }
 }
 
 void bootloader_send_ack(void)

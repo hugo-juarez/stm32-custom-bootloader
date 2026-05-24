@@ -40,3 +40,7 @@ if __name__ == "__main__":
         print("NACK received.")
     else:
         print("Unexpected response received.")
+
+    msg = ser.read(2)
+
+    print(f"Message length: {msg[0]}, Bootloader Ver.: {msg[1]}")

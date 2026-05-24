@@ -89,6 +89,8 @@ void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer);
 void bootloader_handle_read_otp(uint8_t *pBuffer);
 void bootloader_handle_dis_rw_protect(uint8_t *pBuffer);
 
+void bootloader_send_msg(const uint8_t* msg, uint8_t msg_len);
+
 void bootloader_send_ack(void);
 void bootloader_send_nack(void);
 
@@ -171,6 +173,8 @@ void print_msg(const char *fmt, ...);
 #define BL_RX_LEN 200
 #define BL_ACK 0xA5
 #define BL_NACK 0x7F
+
+#define BL_VERSION 1U
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
