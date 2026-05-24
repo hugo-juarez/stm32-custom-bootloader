@@ -372,7 +372,7 @@ void bootloader_usb_read_data(void)
   {
     if (cdc_rx_state == CDC_RX_STATE_IDLE) continue;
 
-    uint8_t len = usb_rx_buffer[0] + 1;
+    uint8_t len = usb_rx_buffer[0];
     uint32_t host_crc = *((uint32_t *) (usb_rx_buffer + len - 4) );
 
     VERIFY_CRC crc_valid = bootloader_verify_crc(&usb_rx_buffer[0], len - 4, host_crc);
@@ -380,6 +380,7 @@ void bootloader_usb_read_data(void)
     if (crc_valid == VERIFY_CRC_ERROR)
     {
       bootloader_send_nack();
+      cdc_rx_state = CDC_RX_STATE_IDLE;
       continue;
     };
 
@@ -434,6 +435,7 @@ void bootloader_usb_read_data(void)
       break;
     }
 
+    cdc_rx_state = CDC_RX_STATE_IDLE;
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &usb_rx_buffer[0]);
     USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   }
@@ -555,7 +557,8 @@ void bootloader_send_nack(void)
 
 VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host)
 {
-  uint32_t uw_crc_value = 0xff;
+  __HAL_CRC_DR_RESET(&hcrc);
+  uint32_t uw_crc_value = 0xffffffff;
 
   for (uint32_t i = 0; i < len; i ++)
   {
@@ -563,9 +566,9 @@ VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_ho
     uw_crc_value = HAL_CRC_Accumulate(&hcrc, &i_data, 1);
   }
 
-  if (uw_crc_value != crc_host) return VERIFY_CRC_SUCCESS;
+  if (uw_crc_value != crc_host) return VERIFY_CRC_ERROR;
 
-  return VERIFY_CRC_ERROR;
+  return VERIFY_CRC_SUCCESS;
 }
 
 /* USER CODE END 4 */
