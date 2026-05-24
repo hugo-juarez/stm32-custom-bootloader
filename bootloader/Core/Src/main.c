@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
+#include <stdarg.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,15 +102,15 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(2000);
-  PRINT_MSG("BL_DEBUG_MSG: Hello from Bootloader!!!\r\n");
+  print_msg("BL_DEBUG_MSG: Hello from Bootloader!!!\r\n");
 
   if ( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET )
   {
-    PRINT_MSG("BL_DEBUG_MSG: Button is pressed .. going to BL mode.\r\n");
+    print_msg("BL_DEBUG_MSG: Button is pressed .. going to BL mode.\r\n");
     bootloader_usb_read_data();
   } else
   {
-    PRINT_MSG("BL_DEBUG_MSG: Button is not pressed .. executing user app.\r\n");
+    print_msg("BL_DEBUG_MSG: Button is not pressed .. executing user app.\r\n");
     bootloader_jump_to_user_app();
   }
 
@@ -383,7 +384,7 @@ void bootloader_usb_read_data(void)
     };
 
     // If CRC matches we send ACK byte
-    PRINT_MSG("BL_DEBUG_MSG: checksum success !!");
+    print_msg("BL_DEBUG_MSG: checksum success !!");
     bootloader_send_ack();
 
     
@@ -429,7 +430,7 @@ void bootloader_usb_read_data(void)
       bootloader_handle_dis_rw_protect(usb_rx_buffer);
       break;
     default:
-      PRINT_MSG("BL_DEBUG_MSG:Invalid command code received from host \n");
+      print_msg("BL_DEBUG_MSG:Invalid command code received from host \n");
       break;
     }
 
@@ -444,12 +445,12 @@ void bootloader_jump_to_user_app(void)
   // Function pointer to hold the address of the reset handler
   void (*app_reset_handler)(void) __attribute__((noreturn));
 
-  PRINT_MSG("BL_DEBUG_MSG: bootloader_jump_to_user_app\r\n");
+  print_msg("BL_DEBUG_MSG: bootloader_jump_to_user_app\r\n");
 
   // Configure MSP to be the base address of application stack
   // Which is the first value in the start of the application flash sector
   uint32_t msp_value = *(volatile uint32_t *) FLASH_SECTOR_3_BASE_ADDRESS;
-  PRINT_MSG("BL_DEBUG_MSG: MSP value: %#lx\r\n", msp_value);
+  print_msg("BL_DEBUG_MSG: MSP value: %#lx\r\n", msp_value);
 
   // Fetch reset handler address of application
   // Which is the second value in the stert of the application flash sector
@@ -457,7 +458,7 @@ void bootloader_jump_to_user_app(void)
 
   app_reset_handler = (void *) reset_handler_address;
 
-  PRINT_MSG("BL_DEBUG_MSG: app reset handler address: %#lx\r\n", reset_handler_address);
+  print_msg("BL_DEBUG_MSG: app reset handler address: %#lx\r\n", reset_handler_address);
   HAL_Delay(100);              // let print drain
 
   USBD_DeInit(&hUsbDeviceFS);
@@ -480,13 +481,15 @@ void bootloader_jump_to_user_app(void)
   app_reset_handler();
 }
 
-void print_msg(const int msg_len)
+void print_msg(const char *fmt, ...)
 {
-  uint8_t result = USBD_BUSY;
-  while (result == USBD_BUSY)
-  {
-    result = CDC_Transmit_FS(usb_tx_buf, msg_len);
-  }
+  char str[80];
+
+  va_list args;
+  va_start(args, fmt);
+  vsprintf(str, fmt, args);
+  HAL_UART_Transmit(&huart2, (uint8_t *)str, strlen(str), HAL_MAX_DELAY);
+  va_end(args);
 }
 
 void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer)

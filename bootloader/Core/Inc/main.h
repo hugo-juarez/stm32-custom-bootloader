@@ -94,7 +94,7 @@ void bootloader_send_nack(void);
 
 VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host);
 
-void print_msg(int msg_len);
+void print_msg(const char *fmt, ...);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -171,7 +171,6 @@ void print_msg(int msg_len);
 #define BL_RX_LEN 200
 #define BL_ACK 0xA5
 #define BL_NACK 0x7F
-#define PRINT_MSG(fmt, ...) print_msg(sprintf((char*)usb_tx_buf, fmt, ##__VA_ARGS__))
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
