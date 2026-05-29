@@ -1,4 +1,5 @@
 import serial
+import os
 
 #BL Commands
 BL_GET_VER                                  = 0x51
@@ -73,6 +74,14 @@ def get_crc(buff, length):
                 crc = (crc << 1)
             crc &= 0xFFFFFFFF
     return crc
+
+def calc_file_len(file_name):
+    size = os.path.getsize(file_name)
+    return size
+
+def open_the_file(file_name):
+    bin_file = open(file_name, 'rb')
+    return bin_file
 
 #----------------------------- Serial Port ----------------------------------------
 def serial_port_init(port):
@@ -152,6 +161,20 @@ def parse_BL_FLASH_ERASE(length):
     elif value[0] == HAL_INV_ADDR:
         print("\n   Erase Status : Invalid Address Code : HAL_INV_ADDR")
 
+def parse_BL_MEM_WRITE(length):
+    value = ser.read(length)
+    value = bytearray(value)
+    if value[0] == HAL_OK:
+        print("\n   Memory Write Status : Success Code : HAL_OK")
+    elif value[0] == HAL_ERROR:
+        print("\n   Memory Write Status : Error Code : HAL_ERROR")
+    elif value[0] == HAL_BUSY:
+        print("\n   Memory Write Status : Busy Code : HAL_BUSY")
+    elif value[0] == HAL_TIMEOUT:
+        print("\n   Memory Write Status : Timeout Code : HAL_TIMEOUT")
+    elif value[0] == HAL_INV_ADDR:
+        print("\n   Memory Write Status : Invalid Address Code : HAL_INV_ADDR")
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -172,6 +195,9 @@ def response_parsing(cmd):
         parse_BL_GO_TO_ADDR(length)
     elif cmd == BL_FLASH_ERASE:
         parse_BL_FLASH_ERASE(length)
+    elif cmd == BL_MEM_WRITE:
+        parse_BL_MEM_WRITE(length)
+        return
 
     input("\n   Press Enter to continue...")
 
@@ -256,6 +282,47 @@ def main():
                     response_parsing(BL_FLASH_ERASE)
                 else:
                     print("\n   Failed to send command.")
+            case '8':
+                print("\n   Command == > BL_MEM_WRITE")
+
+                file_name = input("\n   Please enter the binary file name to write: ")
+                try:
+                    len_of_file = calc_file_len(file_name)
+                    print("\n   Length of the file is : ", len_of_file, " bytes")
+                except Exception as e:
+                    print("\n   Error getting file length: ", e)
+                    continue
+
+                mem_address = input("\n   Please enter 4 bytes memory address in hex: ")
+                mem_address = int(mem_address, 16)
+
+                bytes_remaining = len_of_file
+                bytes_so_far_sent = 0
+
+                with open_the_file(file_name) as file:
+                    while bytes_remaining:
+                        if bytes_remaining >= 48:
+                            len_to_read = 48
+                        else:
+                            len_to_read = bytes_remaining
+
+                        value = file.read(len_to_read)
+                        if not value:
+                            break
+                        value = bytearray(value)
+
+                        chunk_addr = (mem_address + bytes_so_far_sent).to_bytes(4, byteorder='little')
+
+                        cmd_len = BL_MEM_WRITE_LEN + len_to_read
+                        ack = send_command(cmd_len, BL_MEM_WRITE, *chunk_addr, len_to_read, *value)
+                        if ack:
+                            response_parsing(BL_MEM_WRITE)
+                        else:
+                            print("\n   Failed to send command.")
+                            break
+
+                        bytes_remaining -= len_to_read
+                        bytes_so_far_sent += len_to_read
 
 
 if __name__ == "__main__":

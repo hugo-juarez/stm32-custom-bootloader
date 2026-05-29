@@ -576,7 +576,29 @@ void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer)
 }
 void bootloader_handle_mem_write_cmd(uint8_t *pBuffer)
 {
+  uint32_t mem_addr = *((uint32_t *) &pBuffer[2]);
+  uint8_t payload_len = pBuffer[6];
 
+  print_msg("BL_DEBUG_MSG: bootloader_handle_mem_write_cmd\r\n");
+
+  print_msg("BL_DEBUG_MSG: mem write address : %#x\r\n",mem_addr);
+
+  uint8_t addr_valid = bootloader_verify_address(mem_addr);
+
+  if ( addr_valid != ADDR_VALID )
+  {
+    print_msg("BL_DEBUG_MSG: invalid mem write address\r\n");
+    bootloader_send_msg(&addr_valid, 1);
+    return;
+  }
+
+  print_msg("BL_DEBUG_MSG: valid mem write address\r\n");
+
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+  uint8_t write_status = bootloader_mem_write(&pBuffer[7], mem_addr, payload_len);
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+
+  bootloader_send_msg(&write_status, 1);
 }
 void bootloader_handle_en_rw_protect(uint8_t *pBuffer)
 {
@@ -679,6 +701,22 @@ uint8_t bootloader_flash_erase(uint8_t sector_number, uint8_t number_of_sectors)
   HAL_FLASH_Unlock();
   uint32_t sector_error = 0;
   uint8_t status = (uint8_t) HAL_FLASHEx_Erase(&flash_erase_handler, &sector_error);
+  HAL_FLASH_Lock();
+
+  return status;
+}
+
+uint8_t bootloader_mem_write(uint8_t *pBuffer, uint32_t mem_addr, uint32_t len)
+{
+  uint8_t status = HAL_OK;
+
+  HAL_FLASH_Unlock();
+
+  for (uint32_t i = 0; i < len; i ++)
+  {
+    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, mem_addr + i, pBuffer[i]);
+  }
+
   HAL_FLASH_Lock();
 
   return status;
