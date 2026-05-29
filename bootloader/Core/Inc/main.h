@@ -96,6 +96,7 @@ void bootloader_send_nack(void);
 
 VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host);
 uint8_t bootloader_verify_address(uint32_t go_address);
+uint8_t bootloader_flash_erase(uint8_t sector_number, uint8_t number_of_sectors);
 
 void print_msg(const char *fmt, ...);
 /* USER CODE END EFP */
@@ -187,6 +188,8 @@ void print_msg(const char *fmt, ...);
 #define FLASH_SIZE (1024*1024)
 #define BKPSRAM_SIZE (4*1024)
 #define BKPSRAM_END (BKPSRAM_BASE + BKPSRAM_SIZE)
+
+#define INVALID_SECTOR 0x04
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

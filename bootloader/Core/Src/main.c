@@ -564,7 +564,15 @@ void bootloader_handle_go_cmd(uint8_t *pBuffer)
 }
 void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer)
 {
+  print_msg("BL_DEBUG_MSG: bootloader_handle_flash_erase_cmd\r\n");
+  print_msg("BL_DEBUG_MSG: initial_sector : %d no_of_sectors: %d\r\n", pBuffer[2], pBuffer[3]);
 
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+  const uint8_t erase_status = bootloader_flash_erase(pBuffer[2], pBuffer[3]);
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+
+  print_msg("BL_DEBUG_MSG: flash erase status: %#x\r\n", erase_status);
+  bootloader_send_msg(&erase_status, 1);
 }
 void bootloader_handle_mem_write_cmd(uint8_t *pBuffer)
 {
@@ -642,6 +650,38 @@ uint8_t bootloader_verify_address(uint32_t go_address) {
   }
 
   return ADDR_INVALID;
+}
+
+uint8_t bootloader_flash_erase(uint8_t sector_number, uint8_t number_of_sectors)
+{
+  if (number_of_sectors > 11) return INVALID_SECTOR;
+
+  FLASH_EraseInitTypeDef flash_erase_handler = {0};
+  // Sector number = 0xFF means mass erase
+  if (sector_number == 0xFF)
+  {
+    flash_erase_handler.TypeErase = FLASH_TYPEERASE_MASSERASE;
+  } else
+  {
+    uint8_t remaining_sectors = 11 - sector_number;
+    if ( number_of_sectors > remaining_sectors )
+    {
+      number_of_sectors = remaining_sectors;
+    }
+    flash_erase_handler.TypeErase = FLASH_TYPEERASE_SECTORS;
+    flash_erase_handler.Sector = sector_number;
+    flash_erase_handler.NbSectors = number_of_sectors;
+  }
+
+  flash_erase_handler.Banks = FLASH_BANK_1;
+  flash_erase_handler.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+
+  HAL_FLASH_Unlock();
+  uint32_t sector_error = 0;
+  uint8_t status = (uint8_t) HAL_FLASHEx_Erase(&flash_erase_handler, &sector_error);
+  HAL_FLASH_Lock();
+
+  return status;
 }
 
 /* USER CODE END 4 */

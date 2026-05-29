@@ -3,30 +3,37 @@ import serial
 #BL Commands
 BL_GET_VER                                  = 0x51
 BL_GET_HELP                                 = 0x52
-BL_GET_CID                                  =0x53
-BL_GET_RDP_STATUS                           =0x54
-BL_GO_TO_ADDR                               =0x55
-BL_FLASH_ERASE                              =0x56
-BL_MEM_WRITE                                =0x57
-BL_EN_R_W_PROTECT                           =0x58
-BL_MEM_READ                                 =0x59
-BL_READ_SECTOR_P_STATUS                     =0x5A
-BL_OTP_READ                                 =0x5B
-BL_DIS_R_W_PROTECT                          =0x5C
-BL_MY_NEW_COMMAND                           =0x5D
+BL_GET_CID                                  = 0x53
+BL_GET_RDP_STATUS                           = 0x54
+BL_GO_TO_ADDR                               = 0x55
+BL_FLASH_ERASE                              = 0x56
+BL_MEM_WRITE                                = 0x57
+BL_EN_R_W_PROTECT                           = 0x58
+BL_MEM_READ                                 = 0x59
+BL_READ_SECTOR_P_STATUS                     = 0x5A
+BL_OTP_READ                                 = 0x5B
+BL_DIS_R_W_PROTECT                          = 0x5C
+BL_MY_NEW_COMMAND                           = 0x5D
 
 #len details of the command
-BL_GET_VER_LEN                              =6
-BL_GET_HELP_LEN                             =6
-BL_GET_CID_LEN                              =6
-BL_GET_RDP_STATUS_LEN                       =6
-BL_GO_TO_ADDR_LEN                           =10
-BL_FLASH_ERASE_LEN                          =8
+BL_GET_VER_LEN                              = 6
+BL_GET_HELP_LEN                             = 6
+BL_GET_CID_LEN                              = 6
+BL_GET_RDP_STATUS_LEN                       = 6
+BL_GO_TO_ADDR_LEN                           = 10
+BL_FLASH_ERASE_LEN                          = 8
 BL_MEM_WRITE_LEN                            = 11
-BL_EN_R_W_PROTECT_LEN                       =8
-BL_READ_SECTOR_P_STATUS_LEN                 =6
-BL_DIS_R_W_PROTECT_LEN                      =6
-BL_MY_NEW_COMMAND_LEN                       =8
+BL_EN_R_W_PROTECT_LEN                       = 8
+BL_READ_SECTOR_P_STATUS_LEN                 = 6
+BL_DIS_R_W_PROTECT_LEN                      = 6
+BL_MY_NEW_COMMAND_LEN                       = 8
+
+# Status
+HAL_OK                                      = 0x00
+HAL_ERROR                                   = 0x01
+HAL_BUSY                                    = 0x02
+HAL_TIMEOUT                                 = 0x03
+HAL_INV_ADDR                                = 0x04
 
 #----------------------------- utilities----------------------------------------
 
@@ -131,6 +138,20 @@ def parse_BL_GO_TO_ADDR(length):
     value = bytearray(addr)
     print("\n   Address Status : ",hex(value[0]))
 
+def parse_BL_FLASH_ERASE(length):
+    erase_status = ser.read(length)
+    value = bytearray(erase_status)
+    if value[0] == HAL_OK:
+        print("\n   Erase Status : Success Code : HAL_OK")
+    elif value[0] == HAL_ERROR:
+        print("\n   Erase Status : Error Code : HAL_ERROR")
+    elif value[0] == HAL_BUSY:
+        print("\n   Erase Status : Busy Code : HAL_BUSY")
+    elif value[0] == HAL_TIMEOUT:
+        print("\n   Erase Status : Timeout Code : HAL_TIMEOUT")
+    elif value[0] == HAL_INV_ADDR:
+        print("\n   Erase Status : Invalid Address Code : HAL_INV_ADDR")
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -149,6 +170,8 @@ def response_parsing(cmd):
         parse_BL_GET_RDP_STATUS(length)
     elif cmd == BL_GO_TO_ADDR:
         parse_BL_GO_TO_ADDR(length)
+    elif cmd == BL_FLASH_ERASE:
+        parse_BL_FLASH_ERASE(length)
 
     input("\n   Press Enter to continue...")
 
@@ -207,6 +230,32 @@ def main():
                 else:
                     print("\n   Failed to send command.")
                 break
+            case '6':
+                print("\n   Command == > BL_FLASH_MASS_ERASE")
+                sector_number = 0xFF
+                number_of_sectors = 0
+                ack = send_command(BL_FLASH_ERASE_LEN, BL_FLASH_ERASE, sector_number, number_of_sectors)
+                if ack:
+                    response_parsing(BL_FLASH_ERASE)
+                else:
+                    print("\n   Failed to send command.")
+            case '7':
+                print("\n   Command == > BL_FLASH_ERASE")
+                sector_number = input("\n   Please enter sector number to erase: ")
+                sector_number = int(sector_number, 16)
+                if(sector_number > 11):
+                    print("\n   Invalid sector number. Please enter a number between 0 and 11.")
+                    continue
+                number_of_sectors = input("\n   Please enter number of sectors to erase: ")
+                number_of_sectors = int(number_of_sectors, 16)
+                if(number_of_sectors < 1 or number_of_sectors > 12):
+                    print("\n   Invalid number of sectors. Please enter a number between 1 and 12.")
+                    continue
+                ack = send_command(BL_FLASH_ERASE_LEN, BL_FLASH_ERASE, sector_number, number_of_sectors)
+                if ack:
+                    response_parsing(BL_FLASH_ERASE)
+                else:
+                    print("\n   Failed to send command.")
 
 
 if __name__ == "__main__":
