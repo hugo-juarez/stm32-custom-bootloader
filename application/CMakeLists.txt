@@ -66,3 +66,12 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
     # Add user defined libraries
 )
+
+# Define the path to the objcopy tool (usually part of your ARM toolchain)
+set(OBJCOPY arm-none-eabi-objcopy)
+
+# Create a .bin file after the build completes
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${OBJCOPY} -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+        COMMENT "Generating binary output: ${PROJECT_NAME}.bin"
+)
