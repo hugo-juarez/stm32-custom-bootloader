@@ -395,7 +395,7 @@ void bootloader_usb_read_data(void)
     switch (cmd)
     {
     case BL_GET_VER:
-      bootloader_handle_getver_cmd(usb_rx_buffer);
+      bootloader_handle_getver_cmd();
       break;
     case BL_GET_HELP:
       bootloader_handle_gethelp_cmd(usb_rx_buffer);
@@ -494,7 +494,7 @@ void print_msg(const char *fmt, ...)
   va_end(args);
 }
 
-void bootloader_handle_getver_cmd(uint8_t *bl_rx_buffer)
+void bootloader_handle_getver_cmd()
 {
   print_msg("BL_DEBUG_MSG: bootloader_handle_getver_cmd\r\n");
   uint8_t bl_version = (uint8_t) BL_VERSION;
