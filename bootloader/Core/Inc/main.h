@@ -77,9 +77,9 @@ void bootloader_usb_read_data(void);
 void bootloader_jump_to_user_app(void);
 
 void bootloader_handle_getver_cmd();
-void bootloader_handle_gethelp_cmd(uint8_t *pBuffer);
-void bootloader_handle_getcid_cmd(uint8_t *pBuffer);
-void bootloader_handle_getrdp_cmd(uint8_t *pBuffer);
+void bootloader_handle_gethelp_cmd();
+void bootloader_handle_getcid_cmd();
+void bootloader_handle_getrdp_cmd();
 void bootloader_handle_go_cmd(uint8_t *pBuffer);
 void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer);
 void bootloader_handle_mem_write_cmd(uint8_t *pBuffer);

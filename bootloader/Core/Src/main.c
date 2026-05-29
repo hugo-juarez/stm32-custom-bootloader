@@ -409,13 +409,13 @@ void bootloader_usb_read_data(void)
       bootloader_handle_getver_cmd();
       break;
     case BL_GET_HELP:
-      bootloader_handle_gethelp_cmd(usb_rx_buffer);
+      bootloader_handle_gethelp_cmd();
       break;
     case BL_GET_CID:
-      bootloader_handle_getcid_cmd(usb_rx_buffer);
+      bootloader_handle_getcid_cmd();
       break;
     case BL_GET_RDP_STATUS:
-      bootloader_handle_getrdp_cmd(usb_rx_buffer);
+      bootloader_handle_getrdp_cmd();
       break;
     case BL_GO_TO_ADDR:
       bootloader_handle_go_cmd(usb_rx_buffer);
@@ -511,21 +511,25 @@ void bootloader_handle_getver_cmd()
   uint8_t bl_version = (uint8_t) BL_VERSION;
   bootloader_send_msg(&bl_version, 1);
 }
-void bootloader_handle_gethelp_cmd(uint8_t *pBuffer)
+void bootloader_handle_gethelp_cmd()
 {
   print_msg("BL_DEBUG_MSG: bootloader_handle_gethelp_cmd\r\n");
   bootloader_send_msg(supported_commands, sizeof(supported_commands));
 }
-void bootloader_handle_getcid_cmd(uint8_t *pBuffer)
+void bootloader_handle_getcid_cmd()
 {
   print_msg("BL_DEBUG_MSG: bootloader_handle_getcid_cmd\r\n");
   uint16_t cid = (uint16_t) (DBGMCU->IDCODE) & 0x0FFF;
   print_msg("BL_DEBUG_MSG: MCU id: %d %#x\r\n", cid, cid);
   bootloader_send_msg((uint8_t *)&cid, 2);
 }
-void bootloader_handle_getrdp_cmd(uint8_t *pBuffer)
+void bootloader_handle_getrdp_cmd()
 {
-
+  print_msg("BL_DEBUG_MSG: bootloader_handle_getrdp_cmd\r\n");
+  volatile uint32_t *pOB_addr = (uint32_t *) 0x1FFFC000;
+  uint8_t rdp_status = (uint8_t) (*pOB_addr >> 8);
+  print_msg("BL_DEBUG_MSG: RDP level: %d %#x\r\n", rdp_status, rdp_status);
+  bootloader_send_msg(&rdp_status, 1);
 }
 void bootloader_handle_go_cmd(uint8_t *pBuffer)
 {

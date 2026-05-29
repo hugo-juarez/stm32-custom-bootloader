@@ -121,6 +121,11 @@ def parse_BL_GET_CID(length):
     cid = int.from_bytes(value, byteorder='little')
     print("\n   Chip ID : ",hex(cid))
 
+def parse_BL_GET_RDP_STATUS(length):
+    rdp_status = ser.read(length)
+    value = bytearray(rdp_status)
+    print("\n   RDP Status : ",hex(value[0]))
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -135,6 +140,8 @@ def response_parsing(cmd):
         parse_BL_GET_HELP(length)
     elif cmd == BL_GET_CID:
         parse_BL_GET_CID(length)
+    elif cmd == BL_GET_RDP_STATUS:
+        parse_BL_GET_RDP_STATUS(length)
 
     input("\n   Press Enter to continue...")
 
@@ -172,6 +179,13 @@ def main():
                 ack = send_command(BL_GET_CID_LEN, BL_GET_CID)
                 if ack:
                     response_parsing(BL_GET_CID)
+                else:
+                    print("\n   Failed to send command.")
+            case '4':
+                print("\n   Command == > BL_GET_RDP_STATUS")
+                ack = send_command(BL_GET_RDP_STATUS_LEN, BL_GET_RDP_STATUS)
+                if ack:
+                    response_parsing(BL_GET_RDP_STATUS)
                 else:
                     print("\n   Failed to send command.")
 
