@@ -126,6 +126,11 @@ def parse_BL_GET_RDP_STATUS(length):
     value = bytearray(rdp_status)
     print("\n   RDP Status : ",hex(value[0]))
 
+def parse_BL_GO_TO_ADDR(length):
+    addr = ser.read(length)
+    value = bytearray(addr)
+    print("\n   Address Status : ",hex(value[0]))
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -142,6 +147,8 @@ def response_parsing(cmd):
         parse_BL_GET_CID(length)
     elif cmd == BL_GET_RDP_STATUS:
         parse_BL_GET_RDP_STATUS(length)
+    elif cmd == BL_GO_TO_ADDR:
+        parse_BL_GO_TO_ADDR(length)
 
     input("\n   Press Enter to continue...")
 
@@ -188,6 +195,18 @@ def main():
                     response_parsing(BL_GET_RDP_STATUS)
                 else:
                     print("\n   Failed to send command.")
+            case '5':
+                print("\n   Command == > BL_GO_TO_ADDR")
+                go_address  = input("\n   Please enter 4 bytes go address in hex: ")
+                go_address = int(go_address, 16)
+                go_address_bytes = go_address.to_bytes(4, byteorder='little')
+                go_address = bytearray(go_address_bytes)
+                ack = send_command(BL_GO_TO_ADDR_LEN, BL_GO_TO_ADDR, *go_address)
+                if ack:
+                    response_parsing(BL_GO_TO_ADDR)
+                else:
+                    print("\n   Failed to send command.")
+                break
 
 
 if __name__ == "__main__":

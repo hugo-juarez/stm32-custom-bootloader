@@ -399,8 +399,6 @@ void bootloader_usb_read_data(void)
     print_msg("BL_DEBUG_MSG: Checksum success !!\r\n");
     bootloader_send_ack();
 
-
-
     const BL_RX_CMD cmd = (BL_RX_CMD) usb_rx_buffer[1];
 
     switch (cmd)
@@ -533,7 +531,36 @@ void bootloader_handle_getrdp_cmd()
 }
 void bootloader_handle_go_cmd(uint8_t *pBuffer)
 {
+  print_msg("BL_DEBUG_MSG: bootloader_handle_go_cmd\r\n");
+  uint32_t go_addr = *((uint32_t *) &pBuffer[2]);
+  print_msg("BL_DEBUG_MSG: Go addr: %#x\r\n", go_addr);
+  uint8_t addr_valid = bootloader_verify_address(go_addr);
+  bootloader_send_msg(&addr_valid, 1);
+  if ( addr_valid == ADDR_VALID )
+  {
+    print_msg("BL_DEBUG_MSG: Jumping to address! \r\n");
+    HAL_Delay(100);  // let UART drain before teardown
 
+    USBD_DeInit(&hUsbDeviceFS);
+    HAL_DeInit();
+    HAL_RCC_DeInit();
+
+    SysTick->CTRL = 0;
+
+    for (int i = 0; i < 8; i++) {
+      NVIC->ICER[i] = 0xFFFFFFFFU;
+      NVIC->ICPR[i] = 0xFFFFFFFFU;
+    }
+
+    __DSB(); __ISB();
+
+    go_addr |= 1;  // ensure Thumb bit is set, safe even if already odd
+    void (*lets_jump)(void) = (void *) go_addr;
+    lets_jump();
+  } else
+  {
+    print_msg("BL_DEBUG_MSG: GO addr invalid! \r\n");
+  }
 }
 void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer)
 {
@@ -602,6 +629,19 @@ VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_ho
   if (uw_crc_value != crc_host) return VERIFY_CRC_ERROR;
 
   return VERIFY_CRC_SUCCESS;
+}
+
+uint8_t bootloader_verify_address(uint32_t go_address) {
+
+  if ((go_address >= SRAM1_BASE && go_address <= SRAM1_END) ||
+        (go_address >= SRAM2_BASE && go_address <= SRAM2_END) ||
+        (go_address >= FLASH_BASE && go_address <= FLASH_END) ||
+        (go_address >= BKPSRAM_BASE && go_address <= BKPSRAM_END))
+  {
+    return ADDR_VALID;
+  }
+
+  return ADDR_INVALID;
 }
 
 /* USER CODE END 4 */

@@ -95,6 +95,7 @@ void bootloader_send_ack(void);
 void bootloader_send_nack(void);
 
 VERIFY_CRC bootloader_verify_crc(uint8_t *pBuffer, uint32_t len, uint32_t crc_host);
+uint8_t bootloader_verify_address(uint32_t go_address);
 
 void print_msg(const char *fmt, ...);
 /* USER CODE END EFP */
@@ -175,6 +176,17 @@ void print_msg(const char *fmt, ...);
 #define BL_NACK 0x7F
 
 #define BL_VERSION 1U
+
+#define ADDR_VALID 0x00
+#define ADDR_INVALID 0x01
+
+#define SRAM1_SIZE (112*1024)
+#define SRAM1_END (SRAM1_BASE + SRAM1_SIZE)
+#define SRAM2_SIZE (16*1024)
+#define SRAM2_END (SRAM2_BASE + SRAM2_SIZE)
+#define FLASH_SIZE (1024*1024)
+#define BKPSRAM_SIZE (4*1024)
+#define BKPSRAM_END (BKPSRAM_BASE + BKPSRAM_SIZE)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
