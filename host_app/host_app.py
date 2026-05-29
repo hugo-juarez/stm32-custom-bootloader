@@ -107,6 +107,14 @@ def parse_BL_GET_VER(length):
     value = bytearray(ver)
     print("\n   Bootloader Ver. : ",hex(value[0]))
 
+def parse_BL_GET_HELP(length):
+    cmd_list = ser.read(length)
+    value = bytearray(cmd_list)
+    print("\n   Supported Command List :", end=' ')
+    for i in range(length):
+        print("",hex(value[i]), end=' ')
+    print("")
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -117,6 +125,8 @@ def response_parsing(cmd):
 
     if cmd == BL_GET_VER:
         parse_BL_GET_VER(length)
+    elif cmd == BL_GET_HELP:
+        parse_BL_GET_HELP(length)
 
     input("\n   Press Enter to continue...")
 
@@ -140,6 +150,13 @@ def main():
                 ack = send_command(BL_GET_VER_LEN, BL_GET_VER)
                 if ack:
                     response_parsing(BL_GET_VER)
+                else:
+                    print("\n   Failed to send command.")
+            case '2':
+                print("\n   Command == > BL_GET_HELP")
+                ack = send_command(BL_GET_HELP_LEN, BL_GET_HELP)
+                if ack:
+                    response_parsing(BL_GET_HELP)
                 else:
                     print("\n   Failed to send command.")
 

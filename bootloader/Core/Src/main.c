@@ -52,6 +52,17 @@ uint8_t usb_rx_buffer[BL_RX_LEN];
 extern USBD_HandleTypeDef hUsbDeviceFS;
 extern CDC_RX_STATE cdc_rx_state;
 extern uint8_t data_len;
+
+uint8_t supported_commands[] = {
+    BL_GET_VER ,
+    BL_GET_HELP,
+    BL_GET_CID,
+    BL_GET_RDP_STATUS,
+    BL_GO_TO_ADDR,
+    BL_FLASH_ERASE,
+    BL_MEM_WRITE,
+    BL_READ_SECTOR_P_STATUS
+} ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -388,7 +399,7 @@ void bootloader_usb_read_data(void)
     print_msg("BL_DEBUG_MSG: Checksum success !!\r\n");
     bootloader_send_ack();
 
-    
+
 
     const BL_RX_CMD cmd = (BL_RX_CMD) usb_rx_buffer[1];
 
@@ -502,7 +513,8 @@ void bootloader_handle_getver_cmd()
 }
 void bootloader_handle_gethelp_cmd(uint8_t *pBuffer)
 {
-
+  print_msg("BL_DEBUG_MSG: bootloader_handle_gethelp_cmd\r\n");
+  bootloader_send_msg(supported_commands, sizeof(supported_commands));
 }
 void bootloader_handle_getcid_cmd(uint8_t *pBuffer)
 {
