@@ -536,31 +536,31 @@ void bootloader_handle_go_cmd(uint8_t *pBuffer)
   print_msg("BL_DEBUG_MSG: Go addr: %#x\r\n", go_addr);
   uint8_t addr_valid = bootloader_verify_address(go_addr);
   bootloader_send_msg(&addr_valid, 1);
-  if ( addr_valid == ADDR_VALID )
-  {
-    print_msg("BL_DEBUG_MSG: Jumping to address! \r\n");
-    HAL_Delay(100);  // let UART drain before teardown
-
-    USBD_DeInit(&hUsbDeviceFS);
-    HAL_DeInit();
-    HAL_RCC_DeInit();
-
-    SysTick->CTRL = 0;
-
-    for (int i = 0; i < 8; i++) {
-      NVIC->ICER[i] = 0xFFFFFFFFU;
-      NVIC->ICPR[i] = 0xFFFFFFFFU;
-    }
-
-    __DSB(); __ISB();
-
-    go_addr |= 1;  // ensure Thumb bit is set, safe even if already odd
-    void (*lets_jump)(void) = (void *) go_addr;
-    lets_jump();
-  } else
+  if ( addr_valid != ADDR_VALID )
   {
     print_msg("BL_DEBUG_MSG: GO addr invalid! \r\n");
+    return;
   }
+
+  print_msg("BL_DEBUG_MSG: Jumping to address! \r\n");
+  HAL_Delay(100);  // let UART drain before teardown
+
+  USBD_DeInit(&hUsbDeviceFS);
+  HAL_DeInit();
+  HAL_RCC_DeInit();
+
+  SysTick->CTRL = 0;
+
+  for (int i = 0; i < 8; i++) {
+    NVIC->ICER[i] = 0xFFFFFFFFU;
+    NVIC->ICPR[i] = 0xFFFFFFFFU;
+  }
+
+  __DSB(); __ISB();
+
+  go_addr |= 1;  // ensure Thumb bit is set, safe even if already odd
+  void (*lets_jump)(void) = (void *) go_addr;
+  lets_jump();
 }
 void bootloader_handle_flash_erase_cmd(uint8_t *pBuffer)
 {
