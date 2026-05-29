@@ -518,7 +518,10 @@ void bootloader_handle_gethelp_cmd(uint8_t *pBuffer)
 }
 void bootloader_handle_getcid_cmd(uint8_t *pBuffer)
 {
-
+  print_msg("BL_DEBUG_MSG: bootloader_handle_getcid_cmd\r\n");
+  uint16_t cid = (uint16_t) (DBGMCU->IDCODE) & 0x0FFF;
+  print_msg("BL_DEBUG_MSG: MCU id: %d %#x\r\n", cid, cid);
+  bootloader_send_msg((uint8_t *)&cid, 2);
 }
 void bootloader_handle_getrdp_cmd(uint8_t *pBuffer)
 {

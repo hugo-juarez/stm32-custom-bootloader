@@ -115,6 +115,12 @@ def parse_BL_GET_HELP(length):
         print("",hex(value[i]), end=' ')
     print("")
 
+def parse_BL_GET_CID(length):
+    cid = ser.read(length)
+    value = bytearray(cid)
+    cid = int.from_bytes(value, byteorder='little')
+    print("\n   Chip ID : ",hex(cid))
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -127,6 +133,8 @@ def response_parsing(cmd):
         parse_BL_GET_VER(length)
     elif cmd == BL_GET_HELP:
         parse_BL_GET_HELP(length)
+    elif cmd == BL_GET_CID:
+        parse_BL_GET_CID(length)
 
     input("\n   Press Enter to continue...")
 
@@ -139,7 +147,7 @@ def main():
     while True:
         print_menu()
 
-        cmd = input("\n   Type the command code here :")
+        cmd = input("\n   Type the command code here : ")
 
         match cmd:
             case '0':
@@ -159,9 +167,13 @@ def main():
                     response_parsing(BL_GET_HELP)
                 else:
                     print("\n   Failed to send command.")
-
-
-    
+            case '3':
+                print("\n   Command == > BL_GET_CID")
+                ack = send_command(BL_GET_CID_LEN, BL_GET_CID)
+                if ack:
+                    response_parsing(BL_GET_CID)
+                else:
+                    print("\n   Failed to send command.")
 
 
 if __name__ == "__main__":
