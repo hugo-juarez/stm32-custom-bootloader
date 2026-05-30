@@ -175,6 +175,20 @@ def parse_BL_MEM_WRITE(length):
     elif value[0] == HAL_INV_ADDR:
         print("\n   Memory Write Status : Invalid Address Code : HAL_INV_ADDR")
 
+def parse_BL_READ_SECTOR_P_STATUS(length):
+    value = ser.read(length)
+    value = bytearray(value)
+    bit_array = [(byte >> i) & 1 for byte in value for i in range(8)]
+    print("\n   =================================================================")
+    print("   Sector\t\t\t Protection ")
+    print("   =================================================================\n")
+    for i in range(12):
+        print("   Sector", i, end='')
+        if bit_array[i] == 0:
+            print("\t\t\t Protected")
+        else:
+            print("\t\t\t No protection")
+
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
 
@@ -198,6 +212,8 @@ def response_parsing(cmd):
     elif cmd == BL_MEM_WRITE:
         parse_BL_MEM_WRITE(length)
         return
+    elif cmd == BL_READ_SECTOR_P_STATUS:
+        parse_BL_READ_SECTOR_P_STATUS(length)
 
     input("\n   Press Enter to continue...")
 
@@ -323,6 +339,13 @@ def main():
 
                         bytes_remaining -= len_to_read
                         bytes_so_far_sent += len_to_read
+            case '11':
+                print("\n   Command == > BL_READ_SECTOR_P_STATUS")
+                ack = send_command(BL_READ_SECTOR_P_STATUS_LEN, BL_READ_SECTOR_P_STATUS)
+                if ack:
+                    response_parsing(BL_READ_SECTOR_P_STATUS)
+                else:
+                    print("\n   Failed to send command.")
 
 
 if __name__ == "__main__":

@@ -610,7 +610,11 @@ void bootloader_handle_mem_read (uint8_t *pBuffer)
 }
 void bootloader_handle_read_sector_protection_status(uint8_t *pBuffer)
 {
-
+  print_msg("BL_DEBUG_MSG: bootloader_handle_read_sector_protection_status\r\n");
+  volatile uint32_t *pOB_addr = (uint32_t *) 0x1FFFC008;
+  uint16_t sector_protection = (uint16_t) (*pOB_addr & 0x0FFF);
+  print_msg("BL_DEBUG_MSG: nWRP: %d %#x\r\n", sector_protection, sector_protection);
+  bootloader_send_msg((uint8_t *)&sector_protection, 2);
 }
 void bootloader_handle_read_otp(uint8_t *pBuffer)
 {
