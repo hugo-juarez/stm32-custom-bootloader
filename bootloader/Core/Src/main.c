@@ -602,7 +602,14 @@ void bootloader_handle_mem_write_cmd(uint8_t *pBuffer)
 }
 void bootloader_handle_en_rw_protect(uint8_t *pBuffer)
 {
+  print_msg("BL_DEBUG_MSG: bootloader_handle_en_rw_protect\r\n");
+  uint16_t sector_protection = *((uint16_t *) &pBuffer[2]) & 0x0FFF;
+  uint8_t status = HAL_OK;
 
+  status = bootloader_config_flash_sector_rw_protection(sector_protection, SET);
+
+  print_msg("BL_DEBUG_MSG: modifying opt status: %#x\n",status);
+  bootloader_send_msg(&status, 1);
 }
 void bootloader_handle_mem_read (uint8_t *pBuffer)
 {
@@ -622,7 +629,14 @@ void bootloader_handle_read_otp(uint8_t *pBuffer)
 }
 void bootloader_handle_dis_rw_protect(uint8_t *pBuffer)
 {
+  print_msg("BL_DEBUG_MSG: bootloader_handle_dis_rw_protect\r\n");
+  uint16_t sector_protection = *((uint16_t *) &pBuffer[2]) & 0x0FFF;
+  uint8_t status = HAL_OK;
 
+  status = bootloader_config_flash_sector_rw_protection(sector_protection, RESET);
+
+  print_msg("BL_DEBUG_MSG: modifying opt status: %#x\n",status);
+  bootloader_send_msg(&status, 1);
 }
 
 void bootloader_send_msg(const uint8_t* msg, const uint8_t msg_len)
@@ -724,6 +738,35 @@ uint8_t bootloader_mem_write(uint8_t *pBuffer, uint32_t mem_addr, uint32_t len)
   HAL_FLASH_Lock();
 
   return status;
+}
+
+uint8_t bootloader_config_flash_sector_rw_protection(uint16_t sectors, uint8_t state)
+{
+  volatile uint32_t *pOPTCR = (uint32_t *) 0x40023C14;
+
+  HAL_FLASH_OB_Unlock();
+
+  // Check that no flash memory operation is ongoing by checking the BSY bit in the FLASH_SR register
+  while (__HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY) != RESET);
+
+  // Write the desired option value in the FLASH_OPTCR register
+  if (state == SET)
+  {
+    *pOPTCR &= ~(sectors << 16);
+  } else
+  {
+    *pOPTCR |= (sectors << 16);
+  }
+
+  // Set the option start bit (OPTSTRT) in the FLASH_OPTCR register
+  *pOPTCR |= (1 << 1);
+
+  // Wait for the BSY bit to be cleared.
+  while (__HAL_FLASH_GET_FLAG(FLASH_FLAG_BSY) != RESET);
+
+  HAL_FLASH_OB_Lock();
+
+  return HAL_OK;
 }
 
 /* USER CODE END 4 */

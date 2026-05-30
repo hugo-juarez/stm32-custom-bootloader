@@ -26,7 +26,7 @@ BL_FLASH_ERASE_LEN                          = 8
 BL_MEM_WRITE_LEN                            = 11
 BL_EN_R_W_PROTECT_LEN                       = 8
 BL_READ_SECTOR_P_STATUS_LEN                 = 6
-BL_DIS_R_W_PROTECT_LEN                      = 6
+BL_DIS_R_W_PROTECT_LEN                      = 8
 BL_MY_NEW_COMMAND_LEN                       = 8
 
 # Status
@@ -60,7 +60,6 @@ def print_menu():
     print("   BL_READ_SECTOR_P_STATUS               --> 11")
     print("   BL_OTP_READ                           --> 12")
     print("   BL_DIS_R_W_PROTECT                    --> 13")
-    print("   BL_MY_NEW_COMMAND                     --> 14")
     print("   MENU_EXIT                             --> 0")
 
 def get_crc(buff, length):
@@ -175,6 +174,14 @@ def parse_BL_MEM_WRITE(length):
     elif value[0] == HAL_INV_ADDR:
         print("\n   Memory Write Status : Invalid Address Code : HAL_INV_ADDR")
 
+def parse_BL_EN_R_W_PROTECT(length):
+    value = ser.read(length)
+    value = bytearray(value)
+    if value[0] == HAL_OK:
+        print("\n   Enable Read/Write Protection Status")
+    else:
+        print("\n   Failed in enabling Read/Write Protection Status")
+
 def parse_BL_READ_SECTOR_P_STATUS(length):
     value = ser.read(length)
     value = bytearray(value)
@@ -188,6 +195,14 @@ def parse_BL_READ_SECTOR_P_STATUS(length):
             print("\t\t\t Protected")
         else:
             print("\t\t\t No protection")
+
+def parse_BL_DIS_R_W_PROTECT(length):
+    value = ser.read(length)
+    value = bytearray(value)
+    if value[0] == HAL_OK:
+        print("\n   Disable Read/Write Protection Status")
+    else:
+        print("\n   Failed in disabling Read/Write Protection Status")
 
 #------------------------------ parsing response ----------------------------------------
 def response_parsing(cmd):
@@ -212,8 +227,12 @@ def response_parsing(cmd):
     elif cmd == BL_MEM_WRITE:
         parse_BL_MEM_WRITE(length)
         return
+    elif cmd == BL_EN_R_W_PROTECT:
+        parse_BL_EN_R_W_PROTECT(length)
     elif cmd == BL_READ_SECTOR_P_STATUS:
         parse_BL_READ_SECTOR_P_STATUS(length)
+    elif cmd == BL_DIS_R_W_PROTECT:
+        parse_BL_DIS_R_W_PROTECT(length)
 
     input("\n   Press Enter to continue...")
 
@@ -339,6 +358,23 @@ def main():
 
                         bytes_remaining -= len_to_read
                         bytes_so_far_sent += len_to_read
+            case '9':
+                print("\n   Command == > BL_EN_R_W_PROTECT")
+                total_sector = int(input("\n   How many sectors do you want to protect ?: "))
+                if(total_sector < 1 or total_sector > 12):
+                    print("\n   Invalid number of sectors. Please enter a number between 1 and 12.")
+                    continue
+                sector_numbers = [0,0,0,0,0,0,0,0,0,0,0,0]
+                sector_details=0
+                for x in range(total_sector):
+                    sector_numbers[x]=int(input("\n   Enter sector number[{0}]: ".format(x+1) ))
+                    sector_details = sector_details | (1 << sector_numbers[x])
+                sector_details_bytes = sector_details.to_bytes(2, byteorder='little')
+                ack = send_command(BL_EN_R_W_PROTECT_LEN, BL_EN_R_W_PROTECT, *sector_details_bytes)
+                if ack:
+                    response_parsing(BL_EN_R_W_PROTECT)
+                else:
+                    print("\n   Failed to send command.")
             case '11':
                 print("\n   Command == > BL_READ_SECTOR_P_STATUS")
                 ack = send_command(BL_READ_SECTOR_P_STATUS_LEN, BL_READ_SECTOR_P_STATUS)
@@ -346,6 +382,25 @@ def main():
                     response_parsing(BL_READ_SECTOR_P_STATUS)
                 else:
                     print("\n   Failed to send command.")
+            case '13':
+                print("\n   Command == > BL_DIS_R_W_PROTECT")
+                total_sector = int(input("\n   How many sectors do you want to unprotect ?: "))
+                if(total_sector < 1 or total_sector > 12):
+                    print("\n   Invalid number of sectors. Please enter a number between 1 and 12.")
+                    continue
+                sector_numbers = [0,0,0,0,0,0,0,0,0,0,0,0]
+                sector_details=0
+                for x in range(total_sector):
+                    sector_numbers[x]=int(input("\n   Enter sector number[{0}]: ".format(x+1) ))
+                    sector_details = sector_details | (1 << sector_numbers[x])
+                sector_details_bytes = sector_details.to_bytes(2, byteorder='little')
+                ack = send_command(BL_DIS_R_W_PROTECT_LEN, BL_DIS_R_W_PROTECT, *sector_details_bytes)
+                if ack:
+                    response_parsing(BL_DIS_R_W_PROTECT)
+                else:
+                    print("\n   Failed to send command.")
+            case _:
+                print("\n   Invalid command. Please try again.")
 
 
 if __name__ == "__main__":
